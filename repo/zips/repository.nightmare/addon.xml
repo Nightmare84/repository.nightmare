@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addon id="repository.nightmare" name="Nightmare Kodi repository" version="0.0.1" provider-name="Nightmare84">
-    <extension point="xbmc.addon.repository" name="Example Repository">
-        <dir>
-            <info compressed="false">https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/repo/zips/addons.xml</info>
-            <checksum>https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/repo/zips/addons.xml.md5</checksum>
-            <datadir zip="true">https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/repo/zips/</datadir>
-        </dir>
-    </extension>
-    <extension point="xbmc.addon.metadata">
-        <summary>Nightmare Kodi repository</summary>
-        <description>Kodi repository</description>
-        <disclaimer></disclaimer>
-        <platform>all</platform>
-        <assets>
-            <icon>icon.png</icon>
-            <fanart>fanart.jpg</fanart>
-        </assets>
-    </extension>
+	<extension point="xbmc.addon.repository" name="Example Repository">
+		<dir>
+			<info compressed="false">https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/repo/zips/addons.xml</info>
+			<checksum>https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/repo/zips/addons.xml.md5</checksum>
+			<datadir zip="true">https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/repo/zips/</datadir>
+		</dir>
+		<dir minversion="19.0.0" maxversion="19.9.9">
+			<info compressed="false">https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/matrix/zips/addons.xml</info>
+			<checksum>https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/matrix/zips/addons.xml.md5</checksum>
+			<datadir zip="true">https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/matrix/zips/</datadir>
+		</dir>
+	</extension>
+	<extension point="xbmc.addon.metadata">
+		<summary>Nightmare Kodi repository</summary>
+		<description>Kodi repository</description>
+		<disclaimer></disclaimer>
+		<platform>all</platform>
+		<assets>
+			<icon>icon.png</icon>
+			<fanart>fanart.jpg</fanart>
+		</assets>
+	</extension>
 </addon>
