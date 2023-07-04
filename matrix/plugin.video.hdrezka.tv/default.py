@@ -380,7 +380,7 @@ class HdrezkaTV:
     def show(self, uri):
         response = self.make_response('GET', uri)
 
-        helpers.write_to_file(response.text)
+        #helpers.write_to_file(response.text)
 
         content = common.parseDOM(response.text, "div", attrs={"class": "b-content__main"})[0]
         image = common.parseDOM(content, "img", attrs={"itemprop": "image"}, ret="src")[0]
@@ -436,7 +436,7 @@ class HdrezkaTV:
             if self.translator == "select":
                 content, idt, subtitles = self.select_translator(content[0], content, post_id, uri, idt, "get_movie")
                 log(f'*** content: {content}')
-                helpers.write_to_file(content[0])
+                #helpers.write_to_file(content[0])
                 if subtitles is None and content[0].startswith('<!'):
                     log(f'*** subtitles is None')
                     # when action == get_movie, None is returned only when some exception occurs,
