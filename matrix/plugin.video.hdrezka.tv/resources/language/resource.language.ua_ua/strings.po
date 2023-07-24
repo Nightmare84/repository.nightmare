@@ -1,0 +1,70 @@
+# Kodi Media Center language file
+# Addon Name: Hdrezka.tv
+# Addon id: plugin.video.hdrezka.tv
+# Addon Provider: ffoxin
+
+msgid ""
+msgstr ""
+"Project-Id-Version: Kodi Addons\n"
+"Report-Msgid-Bugs-To: alanwww1@kodi.org\n"
+"POT-Creation-Date: 2021-03-01 01:28+0300\n"
+"PO-Revision-Date: 2021-03-01 01:28+0300\n"
+"Last-Translator: ffoxin\n"
+"Language-Team: Russian (http://xbmc.ru/forum/showthread.php?t=12438)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ru_RU\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#30000"
+msgid "Пошук"
+msgstr ""
+
+msgctxt "#30001"
+msgid "Нажаль, пошук по сайту не дав ніяких результатів."
+msgstr ""
+
+msgctxt "#30002"
+msgid "Використовувати транслітерацію при пошуку"
+msgstr ""
+
+msgctxt "#30003"
+msgid "Категорії"
+msgstr ""
+
+msgctxt "#30004"
+msgid "Наступна сторінка ..."
+msgstr ""
+
+msgctxt "#30005"
+msgid "Сезон"
+msgstr ""
+
+msgctxt "#30006"
+msgid "Обрати озвучку"
+msgstr ""
+
+msgctxt "#30007"
+msgid "Список"
+msgstr ""
+
+msgctxt "#30008"
+msgid "Історія пошуку"
+msgstr ""
+
+msgctxt "#30009"
+msgid "Останні надходження"
+msgstr ""
+
+msgctxt "#30010"
+msgid "Популярні"
+msgstr ""
+
+msgctxt "#30011"
+msgid "В очікуванні"
+msgstr ""
+
+msgctxt "#30012"
+msgid "Зараз дивляться"
+msgstr ""
