@@ -65,7 +65,7 @@ class HdrezkaTV:
         self.icon_next = os.path.join(self.addon.getAddonInfo('path'), 'resources/icons/next.png')
         self.language = self.addon.getLocalizedString
         self.handle = int(sys.argv[1])
-
+        helpers.write_to_file(self.language)
         # settings
         self.use_transliteration = self.addon.getSettingBool('use_transliteration')
         self.quality = self.addon.getSetting('quality')
