@@ -40,22 +40,24 @@ print(f'User Current Version:-{sys.version}')
 #import debugpy
 #debugpy.log_to(r"C:\Logs")
 #debugpy.configure(python=r'c:\Program Files\Python38\python.exe')
-#log(f'debugpy Current Version:-{debugpy.__version__}')
-#if debugpy.is_client_connected == False:
-#    debugpy.listen(5678)
+#log(f'debugpy Current Version: {debugpy.__version__}')
+#with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#    portInUse = s.connect_ex(('localhost', 5678)) == 0
+#if portInUse == False:
+#    debugpy.listen(('0.0.0.0', 5678))
 #    debugpy.wait_for_client()
 ##debugpy.breakpoint()
 
 
-log(f'User Current Version:-{sys.version}')
+log(f'User Current Version: {sys.version}')
 
 common = XbmcHelpers
 transliterate = Translit()
 
 socket.setdefaulttimeout(120)
 
-USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
-
+#USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
+USER_AGENT = "AppleWebKit/535.19 (KHTML, like Gecko)"
 
 class HdrezkaTV:
     def __init__(self):
@@ -65,9 +67,10 @@ class HdrezkaTV:
         self.icon_next = os.path.join(self.addon.getAddonInfo('path'), 'resources/icons/next.png')
         self.language = self.addon.getLocalizedString
         self.handle = int(sys.argv[1])
-        helpers.write_to_file(self.language)
+        
         # settings
         self.use_transliteration = self.addon.getSettingBool('use_transliteration')
+        self.only_ua = self.addon.getSetting('only_ua')
         self.quality = self.addon.getSetting('quality')
         self.translator = self.addon.getSetting('translator')
         self.domain = self.addon.getSetting('domain')
@@ -240,7 +243,7 @@ class HdrezkaTV:
 
         response = self.make_response('GET', url)
         content = common.parseDOM(response.text, "div", attrs={"class": "b-content__inline_items"})
-
+        #helpers.write_to_file(url)
         items = common.parseDOM(content, "div", attrs={"class": "b-content__inline_item"})
         post_ids = common.parseDOM(content, "div", attrs={"class": "b-content__inline_item"}, ret="data-id")
 
@@ -288,6 +291,7 @@ class HdrezkaTV:
             item = xbmcgui.ListItem("[COLOR=orange]" + self.language(30004) + "[/COLOR]")
             item.setArt({'icon': self.icon_next})
             xbmcplugin.addDirectoryItem(self.handle, item_uri, item, True)
+            helpers.write_to_file(item_uri)
 
         xbmcplugin.setContent(self.handle, 'movies')
         xbmcplugin.endOfDirectory(self.handle, True)
