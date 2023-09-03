@@ -26,9 +26,12 @@ def color_rating(rating):
 
 
 def built_title(name, country_years, **kwargs):
-    colored_rating = color_rating(kwargs["rating"]["site"])
+    has_ukrainian = '\u0423\u043A\u0440\u0430\u0438\u043D\u0441\u043A\u0438\u0439' in [d.get('img_title') for d in kwargs['translations']]
+    log(f"#########################: {[d.get('img_title') for d in kwargs['translations']]}")
+    colored_name = f'[COLOR=green]{name}[/COLOR]' if has_ukrainian else name
+    colored_rating = color_rating(kwargs["rating"]["imdb"])
     colored_info = f'[COLOR=55FFFFFF]{kwargs["age_limit"]} ({country_years})[/COLOR]'
-    return f'{name} {colored_rating} {colored_info}'
+    return f'{colored_name} {colored_rating} {colored_info}'
 
 
 def log(msg, level=xbmc.LOGINFO):

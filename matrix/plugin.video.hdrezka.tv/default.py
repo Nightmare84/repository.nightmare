@@ -25,6 +25,7 @@ import router
 from voidboost import parse_streams
 from helpers import log, get_media_attributes, color_rating, show_message
 
+import dbhelper
 
 #import ptvsd
 #try:
@@ -61,10 +62,12 @@ USER_AGENT = "AppleWebKit/535.19 (KHTML, like Gecko)"
 
 class HdrezkaTV:
     def __init__(self):
+
         self.id = 'plugin.video.hdrezka.tv'
         self.addon = xbmcaddon.Addon(self.id)
+        self.addondir = self.addon.getAddonInfo('path')
         self.icon = self.addon.getAddonInfo('icon')
-        self.icon_next = os.path.join(self.addon.getAddonInfo('path'), 'resources/icons/next.png')
+        self.icon_next = os.path.join(self.addondir, 'resources/icons/next.png')
         self.language = self.addon.getLocalizedString
         self.handle = int(sys.argv[1])
         
@@ -79,6 +82,8 @@ class HdrezkaTV:
         self.url = self.addon.getSetting('dom_protocol') + '://' + self.domain
         self.proxies = self._load_proxy_settings()
         self.session = self._load_session()
+
+        self.sql = dbhelper.sql(os.path.join(self.addondir, 'hdrezka.db'))
 
     def _load_session(self):
         session = requests.Session()
@@ -233,6 +238,43 @@ class HdrezkaTV:
         xbmcplugin.endOfDirectory(self.handle, True)
 
     def index(self, uri=None, page=None, query_filter=None):
+        if not page: page = 1
+        page_info = self.get_page(uri, page, query_filter)
+        while page and len(page_info['titles']) < 36:
+            page = int(page) + 1
+            p = self.get_page(uri, page, query_filter)
+            page_info = dict((k, page_info.get(k, []) + p.get(k, [])) for k in page_info)
+            #page_info['post_ids'] = page_info['post_ids'] + p['post_ids']
+            #page_info['links'] = page_info['links'] + p['links']
+            #page_info['titles'] = page_info['titles'] + p['titles']
+            #page_info['div_covers'] = page_info['div_covers'] + p['div_covers']
+            #page_info['country_years'] = page_info['country_years'] + p['country_years']
+            if len(p['titles']) < 36: break
+        #ttt = list(filter(lambda p: '\u0423\u043A\u0440\u0430\u0438\u043D\u0441\u043A\u0438\u0439' in [d.get('img_title') for d in p['translations']], page_info))
+        #log(f"#########################: {ttt}")
+        
+        #for i, p in enumerate(page_info):
+        #    log(f"#########################: {str(p)}")
+
+        items = self.get_items(page_info)
+        for item , item_uri, is_folder in items:
+            xbmcplugin.addDirectoryItem(self.handle, item_uri, item, is_folder)
+
+        if not len(page_info['titles']) < 16:
+            params = {'page': 2, 'uri': uri}
+            if page:
+                params['page'] = int(page) + 1
+            if query_filter:
+                params['query_filter'] = query_filter
+            item_uri = router.build_uri('index', **params)
+            item = xbmcgui.ListItem("[COLOR=orange]" + self.language(30004) + "[/COLOR]")
+            item.setArt({'icon': self.icon_next})
+            xbmcplugin.addDirectoryItem(self.handle, item_uri, item, True)
+
+        xbmcplugin.setContent(self.handle, 'movies')
+        xbmcplugin.endOfDirectory(self.handle, True)
+
+    def get_page(self, uri=None, page=None, query_filter=None):
         url = uri
         if not url:
             url = '/'
@@ -243,26 +285,27 @@ class HdrezkaTV:
 
         response = self.make_response('GET', url)
         content = common.parseDOM(response.text, "div", attrs={"class": "b-content__inline_items"})
-        #helpers.write_to_file(url)
         items = common.parseDOM(content, "div", attrs={"class": "b-content__inline_item"})
-        post_ids = common.parseDOM(content, "div", attrs={"class": "b-content__inline_item"}, ret="data-id")
-
+        info = {}
+        info['post_ids'] = common.parseDOM(content, "div", attrs={"class": "b-content__inline_item"}, ret="data-id")
         link_containers = common.parseDOM(items, "div", attrs={"class": "b-content__inline_item-link"})
+        info['links'] = common.parseDOM(link_containers, "a", ret='href')
+        info['titles'] = common.parseDOM(link_containers, "a")
+        info['div_covers'] = common.parseDOM(items, "div", attrs={"class": "b-content__inline_item-cover"})
+        info['country_years'] = common.parseDOM(link_containers, "div")
+        return info
 
-        links = common.parseDOM(link_containers, "a", ret='href')
-        titles = common.parseDOM(link_containers, "a")
-        div_covers = common.parseDOM(items, "div", attrs={"class": "b-content__inline_item-cover"})
-
-        country_years = common.parseDOM(link_containers, "div")
-
-        for i, name in enumerate(titles):
-            info = self.get_item_additional_info(post_ids[i])
-            title = helpers.built_title(name, country_years[i], **info)
-            image = self._normalize_url(common.parseDOM(div_covers[i], "img", ret='src')[0])
-            item_uri = router.build_uri('show', uri=router.normalize_uri(links[i]))
-            year, country, genre = get_media_attributes(country_years[i])
+    def get_items(self, page_info):
+        items = []
+        for i, name in enumerate(page_info['titles']):
+            #info = self.get_item_additional_info(page_info['post_ids'][i])
+            info = self.get_item_full_info(page_info['links'][i])
+            title = helpers.built_title(name, page_info['country_years'][i], **info)
+            image = self._normalize_url(common.parseDOM(page_info['div_covers'][i], "img", ret='src')[0])
+            item_uri = router.build_uri('show', uri=router.normalize_uri(page_info['links'][i]))
+            year, country, genre = get_media_attributes(page_info['country_years'][i])
             item = xbmcgui.ListItem(title)
-            item.setArt({'thumb': image, 'icon': image})
+            item.setArt({'thumb': image, 'icon': image, 'banner': image, 'fanart': image})
             item.setInfo(
                 type='video',
                 infoLabels={
@@ -271,30 +314,17 @@ class HdrezkaTV:
                     'year': year,
                     'country': country,
                     'plot': info['description'],
-                    'rating': info['rating']['site']
+                    'rating': info['rating']['imdb'],
+                    'duration': info.get('duration', None)
                 }
             )
-            is_serial = common.parseDOM(div_covers[i], 'span', attrs={"class": "info"})
+            is_serial = common.parseDOM(page_info['div_covers'][i], 'span', attrs={"class": "info"})
             is_folder = True
             if (self.quality != 'select') and not is_serial:
                 item.setProperty('IsPlayable', 'true')
                 is_folder = False
-            xbmcplugin.addDirectoryItem(self.handle, item_uri, item, is_folder)
-
-        if not len(titles) < 16:
-            params = {'page': 2, 'uri': uri}
-            if page:
-                params['page'] = int(page) + 1
-            if query_filter:
-                params['query_filter'] = query_filter
-            item_uri = router.build_uri('index', **params)
-            item = xbmcgui.ListItem("[COLOR=orange]" + self.language(30004) + "[/COLOR]")
-            item.setArt({'icon': self.icon_next})
-            xbmcplugin.addDirectoryItem(self.handle, item_uri, item, True)
-            helpers.write_to_file(item_uri)
-
-        xbmcplugin.setContent(self.handle, 'movies')
-        xbmcplugin.endOfDirectory(self.handle, True)
+            items.append([item, item_uri, is_folder])
+        return items
 
     def select_quality(self, streams, title, image, subtitles=None):
         for name, quality, url in streams:
@@ -392,12 +422,7 @@ class HdrezkaTV:
         post_id = common.parseDOM(response.text, "input", attrs={"id": "post_id"}, ret="value")[0]
         idt = "0"
         try:
-            idt = common.parseDOM(
-                content,
-                "li",
-                attrs={"class": "b-translator__item active"},
-                ret="data-translator_id"
-            )[0]
+            idt = common.parseDOM(content, "li", attrs={"class": "b-translator__item active"}, ret="data-translator_id")[0]
         except Exception as ex:
             log(f'fault parseDOM ex: {ex}')
             try:
@@ -478,7 +503,10 @@ class HdrezkaTV:
             "is_touch": 1
         })
 
-        additional['description'] = common.parseDOM(response.text, 'div', attrs={'class': 'b-content__bubble_text'})[0]
+        try:
+            additional['description'] = common.parseDOM(response.text, 'div', attrs={'class': 'b-content__bubble_text'})[0]
+        except IndexError:
+            log(f'fault parse site description post_id: {post_id}')
 
         try:
             additional['age_limit'] = re.search(r'<b style="color: #333;">(\d+\+)</b>', response.text).group(1)
@@ -508,6 +536,81 @@ class HdrezkaTV:
             log(f'fault parse kp rating post_id: {post_id}')
 
         return additional
+
+    def get_item_full_info(self, link):
+        full = {
+            'rating': {
+                'site': '',
+                'imdb': '',
+                'kp': ''
+            },
+            'age_limit': '',
+            'description': '',
+            'duration': 0,
+            'translations': []#{'id': 0, 'title': '', 'img_title': ''}
+        }
+        if not self.show_description:
+            return full
+
+        response_text = self.sql.get(router.normalize_uri(link))
+        if not response_text:
+            response_text = self.make_response('GET', router.normalize_uri(link)).text
+            self.sql.put(router.normalize_uri(link), response_text)
+        #log(f"#########################: {response_text}")
+        try:
+            full['description'] = common.parseDOM(response_text, 'div', attrs={'class': 'b-post__description_text'})[0]
+        except IndexError:
+            log(f'fault parse site description link: {link}')
+
+        try:
+            full['age_limit'] = re.search(r'<span class="bold" style="color: #666;">(\d+\+)</span>', response_text).group(1)
+        except AttributeError:
+            log(f'fault parse age_limit link: "{link}"')
+
+        try:
+            site_rating = common.parseDOM(response_text, 'div', attrs={'class': 'b-post__rating'})[0]
+            full['rating']['site'] = common.parseDOM(site_rating, 'span', attrs={'itemprop': 'average'})[0]
+        except IndexError:
+            log(f'fault parse site rating link: {link}')
+
+        try:
+            imdb_rating_block = common.parseDOM(response_text, 'span', attrs={'class': 'b-post__info_rates imdb'})[0]
+            full['rating']['imdb'] = common.parseDOM(imdb_rating_block, 'span')[0]
+        except IndexError:
+            log(f'fault parse imdb rating link: {link}')
+
+        try:
+            kp_rating_block = common.parseDOM(response_text, 'span', attrs={'class': 'b-post__info_rates kp'})[0]
+            full['rating']['kp'] = common.parseDOM(kp_rating_block, 'span')[0]
+        except IndexError:
+            log(f'fault parse kp rating link: {link}')
+
+        
+            
+        try:
+            translations_block = common.parseDOM(response_text, 'ul', attrs={'class': 'b-translators__list'})[0]
+            title_items = common.parseDOM(translations_block, 'li')
+            titles = common.parseDOM(translations_block, 'li', ret='title')
+            ids = common.parseDOM(translations_block, 'li', ret="data-translator_id")
+            img_title = ''
+            for index, title in enumerate(title_items):
+                images = common.parseDOM(title, 'img', ret='title')
+                img_title = images[0] if images else ''
+                full['translations'].append({'id': ids[index], 'title': titles[index], 'img_title': img_title})
+
+            #full['translations'] = common.parseDOM(translations_block, 'li')
+            #for i, val in enumerate(full['translations']):
+            #    full['translations'][i] = re.sub(r'<[^)]*>', '', val).strip()
+        except IndexError:
+            log(f'fault parse translations: {link}')
+
+        try:
+            duration_text = common.parseDOM(response_text, 'td', attrs={'itemprop': 'duration'})[0]
+            full['duration'] = int(re.findall('[0-9]+', duration_text)[0]) * 60
+        except IndexError:
+            log(f'fault parse duration: {link}')
+
+        return full
 
     def history(self):
         words = history.get_history()
@@ -559,7 +662,8 @@ class HdrezkaTV:
         country_years = common.parseDOM(link_containers, "div")
 
         for i, name in enumerate(titles):
-            info = self.get_item_additional_info(post_ids[i])
+            #info = self.get_item_additional_info(post_ids[i])
+            info = self.get_item_full_info(links[i])
             title = helpers.built_title(name, country_years[i], **info)
             image = self._normalize_url(common.parseDOM(items[i], "img", ret='src')[0])
             item_uri = router.build_uri('show', uri=router.normalize_uri(links[i]))
@@ -574,7 +678,7 @@ class HdrezkaTV:
                     'year': year,
                     'country': country,
                     'plot': info['description'],
-                    'rating': info['rating']['site']
+                    'rating': info['rating']['imdb']
                 }
             )
             is_serial = common.parseDOM(items[i], 'span', attrs={"class": "info"})
