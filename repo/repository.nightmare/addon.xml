@@ -6,7 +6,7 @@
 			<checksum>https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/repo/zips/addons.xml.md5</checksum>
 			<datadir zip="true">https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/repo/zips/</datadir>
 		</dir>
-		<dir minversion="19.0.0" maxversion="20.9.9">
+		<dir minversion="19.0.0" maxversion="25.9.9">
 			<info compressed="false">https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/matrix/zips/addons.xml</info>
 			<checksum>https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/matrix/zips/addons.xml.md5</checksum>
 			<datadir zip="true">https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/matrix/zips/</datadir>

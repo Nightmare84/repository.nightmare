@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="script.module.dandy.search.history" name="Search History" version="3.0.2" provider-name="dandy">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0"/>
+    <import addon="script.module.xbmc.helpers" version="3.0.0"/>
+  </requires>
+  <extension point="xbmc.python.script" library="default.py">
+    <provides>executable</provides>
+  </extension>
+  <extension point="xbmc.python.pluginsource" library="plugin.py">
+    <provides>video</provides>
+  </extension>
+  <extension point="kodi.context.item" library="context.py">
+    <item>
+      <label>$ADDON[script.module.dandy.search.history 32000]</label>
+      <visible>Container.Content(tvshows)|Container.Content(movies)|Container.Content(musicvideos)</visible>
+    </item>
+  </extension>
+  <extension point='xbmc.python.module' library='resources/lib' />
+  <extension point="kodi.addon.metadata">
+    <platform>all</platform>
+    <summary lang="en">Search History</summary>
+    <description lang="en">Search History</description>
+    <license>GNU GENERAL PUBLIC LICENSE. Version 3, 29 June 2007</license>
+    <forum></forum>
+    <source></source>
+    <assets>
+        <icon>icon.png</icon>
+    </assets>
+  </extension>
+</addon>
