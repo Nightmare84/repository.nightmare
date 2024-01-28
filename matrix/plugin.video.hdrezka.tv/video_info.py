@@ -6,6 +6,7 @@ import os
 import re
 import router
 from settings import settings
+import time
 import voidboost
 import web_helper
 import XbmcHelpers
@@ -212,6 +213,7 @@ class video_info(object):
     @staticmethod
     def get_page_videos(uri = None, page = None, query_filter = None):
         log(f'get_page_videos(uri = {uri}, page = {page}, query_filter = {query_filter})')
+        startTime = time.time()
         url = uri
         if not url:
             url = '/'
@@ -223,10 +225,13 @@ class video_info(object):
         response = web_helper.web().make_response('GET', url)
         videos = video_info.parse_page(response.text)
         log(f'url: {url}\r\nresponse: {response.text}\r\nvideos count: {len(videos)}')
+        log(f'get_page_videos() time: {int((time.time() - startTime) * 1000)}')
         return videos
 
     @staticmethod
     def parse_page(html):
+        log(f'parse_page()')
+        startTime = time.time()
         content = common.parseDOM(html, "div", attrs={"class": "b-content__inline_items"})
         items = common.parseDOM(content, "div", attrs={"class": "b-content__inline_item"})
         ids = common.parseDOM(content, "div", attrs={"class": "b-content__inline_item"}, ret = 'data-id')
@@ -242,6 +247,7 @@ class video_info(object):
             info.country_year = common.parseDOM(link_containers, "div")[0]
             info.is_series = True if common.parseDOM(item, 'span', attrs={"class": "info"}) else False
             videos.append(info)
+        log(f'parse_page() time: {int((time.time() - startTime) * 1000)}')
         return videos
 
     def toJson(self):

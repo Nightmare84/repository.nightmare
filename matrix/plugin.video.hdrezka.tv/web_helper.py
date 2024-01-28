@@ -1,6 +1,7 @@
 import helpers
 import re
 import requests
+import time
 import video_info
 
 from voidboost import parse_streams
@@ -9,7 +10,7 @@ import XbmcHelpers
 
 class web:
     #USER_AGENT = "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"
-    USER_AGENT = "AppleWebKit/530.19 (KHTML, like Gecko)"
+    USER_AGENT = "AppleWebKit/530.20 (KHTML, like Gecko)"
     
     def __init__(self):
         self.domain = settings.domain
@@ -37,7 +38,11 @@ class web:
         return session
         
     def make_response(self, method, uri, params=None, data=None, cookies=None, headers=None):
-        return self.session.request(method, self.url + uri, params=params, data=data, headers=headers, cookies=cookies)
+        helpers.log(f'make_response() method: {method}, url: {self.url + uri}')
+        startTime = time.time()
+        result = self.session.request(method, self.url + uri, params=params, data=data, headers=headers, cookies=cookies)
+        helpers.log(f'make_response() execution time: {int((time.time() - startTime) * 1000)}ms')
+        return result
 
     def get_episodes(self, id, url, translator_id):
         response = self.get_cdn_series(id, url, translator_id, "get_episodes").json()

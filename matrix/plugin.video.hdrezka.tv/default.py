@@ -9,6 +9,7 @@ from pydoc import Helper
 import re
 import sys
 import socket
+import time
 import urllib.parse
 
 import xbmc
@@ -56,7 +57,7 @@ socket.setdefaulttimeout(120)
 
 class HdrezkaTV:
     def __init__(self):
-        log(f'__init__()')
+        log(f'\r\n\r\n__init__()')
         self.handle = int(sys.argv[1])
         settings.load()
         self.web = web_helper.web()
@@ -204,6 +205,7 @@ class HdrezkaTV:
     def index(self, uri = None, page = None, query_filter = None):
         log(f'index(uri = {uri}, page = {page}, query_filter = {query_filter})')
         log(f'settings.only_ua: {settings.only_ua}')
+        startTime = time.time()
         if not page: page = 0
         videos = []
         while len(videos) < 36:
@@ -231,9 +233,11 @@ class HdrezkaTV:
 
         xbmcplugin.setContent(self.handle, 'movies')
         xbmcplugin.endOfDirectory(self.handle, True)
+        log(f'index() time: {int((time.time() - startTime) * 1000)}')
 
     def get_items(self, video_infos):
         log(f'get_items() items count: {len(video_infos)}')
+        startTime = time.time()
         items = []
 
         for video in video_infos:
@@ -244,9 +248,9 @@ class HdrezkaTV:
             year = video.year
             country = video.country
             genre = video.genre
-
             item = xbmcgui.ListItem(title)
             item.setArt({'thumb': image, 'icon': image, 'banner': image, 'fanart': image})
+            startTime2 = time.time()
             item.setInfo(
                 type='video',
                 infoLabels={
@@ -259,12 +263,15 @@ class HdrezkaTV:
                     'duration': video.duration
                 }
             )
+            log(f'video execution ----------- time: {int((time.time() - startTime2) * 1000)}ms ')
             is_series = video.is_series
             is_folder = True
             if not is_series:
                 item.setProperty('IsPlayable', 'true')
                 is_folder = False
             items.append([item, item_uri, is_folder])
+            log(f'video execution time: {int((time.time() - startTime2) * 1000)}ms ')
+        log(f'get_items() execution time: {int((time.time() - startTime) * 1000)}ms')
         return items
 
     def select_stream(self, streams):
