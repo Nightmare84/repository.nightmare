@@ -183,6 +183,18 @@ class Uakino:
 
                 item = xbmcgui.ListItem(video.formatted_title)
                 item.setProperty("IsPlayable", "true")
+                item.setInfo(
+                    type="video",
+                    infoLabels={
+                        "title": video.title,
+                        "genre": video.genre,
+                        "year": video.year,
+                        # "country": country,
+                        "plot": video.description,
+                        "rating": video.rating,
+                        # "duration": video.duration
+                    },
+                )
                 item_uri = router.build_uri("show", url=router.normalize_uri(video.link))
                 item.setArt({"thumb": video.cover, "icon": video.cover, "banner": video.cover, "fanart": video.cover})
                 xbmcplugin.addDirectoryItem(self.handle, item_uri, item, False)
@@ -309,15 +321,12 @@ class Uakino:
         b = playlistHtml.find('file:"')
         e = playlistHtml.find('"', b + 6)
         playlistLink = playlistHtml[b + 6 : e]
-        #write_to_file(playlistLink)
+        # write_to_file(playlistLink)
 
         m3u = common.fetchPage({"link": playlistLink})["content"].decode("utf-8")
-        #write_to_file(m3u)
+        # write_to_file(m3u)
 
-        links = sorted(
-            [[int(link.split("/")[-2]), link] for link in m3u.splitlines() if "http" in link],
-            key=lambda link: link[0],
-            reverse=True)
+        links = sorted([[int(link.split("/")[-2]), link] for link in m3u.splitlines() if "http" in link], key=lambda link: link[0], reverse=True)
         log(f"links: {links}")
 
         link = links[0][1]
@@ -328,7 +337,7 @@ class Uakino:
         log(f"link: {link}")
 
         item = xbmcgui.ListItem(path=link)
-        #if subtitles: item.setSubtitles(subtitles)
+        # if subtitles: item.setSubtitles(subtitles)
         xbmcplugin.setResolvedUrl(self.handle, True, item)
 
         # playerUrl = f"/engine/ajax/playlists.php?news_id={video.id}&xfield=playlist"
@@ -336,9 +345,7 @@ class Uakino:
         # #player = common.fetchPage({"link": f"{self.url}playerUrl"})
         # player = self.web.make_response("GET", playerUrl).text
         # write_to_file(player)
-        #page = common.fetchPage({"link": video.link})["content"].decode("utf-8")  # .replace("\t", "").replace("\n", "")
-
-
+        # page = common.fetchPage({"link": video.link})["content"].decode("utf-8")  # .replace("\t", "").replace("\n", "")
 
     def play(self, url):
         log(f"play url: {url}")
