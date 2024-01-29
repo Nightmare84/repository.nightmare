@@ -1,6 +1,6 @@
 # Kodi Media Center language file
-# Addon Name: Uakino.net
-# Addon id: plugin.video.uakino.net
+# Addon Name: Uakino.club
+# Addon id: plugin.video.uakino.club
 # Addon Provider: 
 
 msgid ""
@@ -19,8 +19,12 @@ msgstr ""
 
 msgctxt "#30001"
 msgid "Search"
-msgstr "Поиск"
+msgstr "Пошук"
 
 msgctxt "#30002"
 msgid "Search (en)"
-msgstr "Поиск (en)"
+msgstr "Пошук (en)"
+
+msgctxt "#30003"
+msgid "Next page..."
+msgstr "Наступна сторінка..."

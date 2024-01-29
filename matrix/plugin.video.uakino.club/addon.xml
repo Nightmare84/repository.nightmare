@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.uakino.net" name="Uakino.net" version="3.0.0" provider-name="MrStealth, Nightmare84">
+<addon id="plugin.video.uakino.club" name="Uakino.club" version="0.0.1" provider-name="Nightmare84">
   <requires>
     <import addon="xbmc.python" version="3.0.0"/>
     <import addon="script.module.xbmc.helpers" version="2.0.1"/>
     <import addon="script.module.translit" version="1.0.3"/>
+    <import addon="script.module.requests"/>
   </requires>
   <extension point="xbmc.python.pluginsource" provides="video" library="default.py">
     <provides>video</provides>
   </extension>
   <extension point="xbmc.addon.metadata">
-    <summary>Новинки кино, мультфильмы, сериалы</summary>
-    <description>For personal use only</description>
+    <summary>Uakino.club</summary>
+    <description></description>
     <platform>all</platform>
     <assets>
       <icon>icon.png</icon>

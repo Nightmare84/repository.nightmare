@@ -1,12 +1,13 @@
 #!/usr/bin/python
-# Writer (c) 2024, MrStealth, Nightmare84
-# Rev. 3.0.0
-# -*- coding: utf-8 -*-
 
 import os, urllib, sys, socket, re
 import xbmc, xbmcplugin, xbmcgui, xbmcaddon
 import uppod
 from helpers import log, show_message, write_to_file, merge_lists, insertString, repairImageTag
+from video_info import VideoInfo
+from settings import settings
+import router
+import web_helper
 import XbmcHelpers
 import Translit as translit
 from mem_storage import MemStorage
@@ -14,13 +15,13 @@ from mem_storage import MemStorage
 common = XbmcHelpers
 translit = translit.Translit(encoding="cp1251")
 
-try:
-    sys.path.append(os.path.dirname(__file__) + "/../plugin.video.unified.search")
-    from unified_search import UnifiedSearch
-except BaseException:
-    # show_message("UnifiedSearch not found")
-    log("UnifiedSearch not found")
-    pass
+# try:
+#     sys.path.append(os.path.dirname(__file__) + "/../plugin.video.unified.search")
+#     from unified_search import UnifiedSearch
+# except BaseException:
+#     # show_message("UnifiedSearch not found")
+#     log("\r\n\r\nUnifiedSearch not found")
+#     pass
 
 
 class URLParser:
@@ -38,34 +39,30 @@ class URLParser:
 
 class Uakino:
     def __init__(self):
-        self.id = "plugin.video.uakino.net"
+        settings.load()
+        self.id = "plugin.video.uakino.club"
         self.addon = xbmcaddon.Addon(self.id)
         self.icon = self.addon.getAddonInfo("icon")
         self.path = self.addon.getAddonInfo("path")
         self.profile = self.addon.getAddonInfo("profile")
 
-        self.language = self.addon.getLocalizedString
         self.handle = int(sys.argv[1])
-        self.url = "https://uakino.club"
+        self.url = settings.url
 
         self.inext = os.path.join(self.path, "resources/icons/next.png")
         self.debug = self.addon.getSetting("debug") == "true"
 
+        self.web = web_helper.web()
+
     def main(self):
-        params = common.getParameters(sys.argv[2])
-        mode = url = None
+        params = router.parse_uri(sys.argv[2])
+        mode = params.get("mode")
+        url = params.get("url")
+        offset = params.get("offset")
+        page = params.get("page")
+        keyword = params.get("keyword")
 
-        # mode = params['mode'] if params.has_key('mode') else None
-        # url = urllib.unquote_plus(params['url']) if params.has_key('url') else None
-        # offset = params['offset'] if params.has_key('offset') else 0
-        mode = params["mode"] if "mode" in params else None
-        url = urllib.parse.unquote_plus(params["url"]) if "url" in params else None
-        offset = params["offset"] if "offset" in params else 0
-        page = params["page"] if "page" in params else 0
-        keyword = params["keyword"] if "keyword" in params else None
-        unified = params["unified"] if "unified" in params else None
-
-        log(f"mode: {mode}, url: {url}, offset: {offset}, keyword: {keyword}, unified: {unified}")
+        log(f"mode: {mode}, url: {url}, offset: {offset}, page: {page}, keyword: {keyword}")
         if mode == "play":
             self.play(url)
         if mode == "movie" or mode == "show":
@@ -75,14 +72,14 @@ class Uakino:
         if mode == "category":
             self.getCategoryItems(url)
         if mode == "search":
-            self.search(keyword, unified)
+            self.search(keyword)
         elif mode is None:
             self.menu()
 
     def menu(self):
         uri = sys.argv[0] + "?mode={}&url={}".format("search", self.url)
-        item = xbmcgui.ListItem(f"[COLOR=FF00FF00]{self.language(30001)}[/COLOR]")
-        log(f"SSSSSSSSS: '{self.language(32001)}'")
+        item = xbmcgui.ListItem(f"[COLOR=FF00FF00]{settings.language(30001)}[/COLOR]")
+        log(f"SSSSSSSSS: '{settings.language(32001)}'")
         item.setArt({self.icon})
         xbmcplugin.addDirectoryItem(self.handle, uri, item, True)
 
@@ -111,7 +108,7 @@ class Uakino:
 
             for i, category in enumerate(categories):
                 categories[i][2] = list(filter(lambda sub: category[1] in sub[0] and len(sub[0]) - len(category[1]) > 1 and "best" not in sub[0] and "colections" not in sub[0], subs))
-            write_to_file(categories)
+            # write_to_file(categories)
 
             storage = MemStorage()
             storage["subCategories"] = categories
@@ -120,7 +117,7 @@ class Uakino:
                 url = self.url + link
                 uri = f"{sys.argv[0]}?mode=category&url={url}"
                 item = xbmcgui.ListItem(title)
-                item.setArt({"thumb": self.icon})
+                # item.setArt({"thumb": self.icon})
                 xbmcplugin.addDirectoryItem(self.handle, uri, item, True)
 
         else:
@@ -136,7 +133,6 @@ class Uakino:
         allSubCategories = storage["subCategories"]
         subCategories = list(filter(lambda sub: sub[1] == url.replace(self.url, ""), allSubCategories))[0][2]
         write_to_file(subCategories)
-
 
         for link, title in subCategories:
             url = f"{self.url}{link}"
@@ -155,8 +151,6 @@ class Uakino:
         log(f"uri: {uri}")
         response = common.fetchPage({"link": uri})
 
-        items_counter = 0
-
         if response["status"] == 200:
             content = response["content"].decode("utf-8").replace("\t", "").replace("\n", "")
 
@@ -165,7 +159,34 @@ class Uakino:
 
             movies = common.parseDOM(dleContent, "div", attrs={"class": "movie-item short-item"})
             write_to_file(movies)
+            log(f"movies count {len(movies)}")
+            video = VideoInfo()
+            for movieHtml in movies:
+                video.title = common.parseDOM(movieHtml, "div", attrs={"class": "deck-title"})[0]
+                video.link = common.parseDOM(movieHtml, "a", attrs={"class": "movie-title"}, ret="href")[0]
+                video.cover = self.url + common.parseDOM(movieHtml, "img", ret="src")[0]
+                clearfixes = common.parseDOM(movieHtml, "div", attrs={"class": "movie-desk-item clearfix"})
+                for clearfix in clearfixes:
+                    label = common.parseDOM(clearfix, "div", attrs={"class": "fi-label"})[0]
+                    value = common.parseDOM(clearfix, "div", attrs={"class": "deck-value"})[0]
+                    # log(f"{label}: {value}")
 
+                    if "imdb" in label:
+                        video.rating = float(value)
+                    if "Жанр:" in label:
+                        video.genre = value
+                    if "Рік виходу:" in label:
+                        video.year = common.parseDOM(value, "a")[0]
+
+                # log(f"\r\ntitle: {video.title}\r\ncover: {video.cover}\r\nrating: {video.rating}\r\ngenre: {video.genre}\r\nyear: {video.year}\r\n\r\n\r\n\r\n")
+
+                item = xbmcgui.ListItem(video.formatted_title)
+                item.setProperty("IsPlayable", "true")
+                item_uri = router.build_uri("show", url=router.normalize_uri(video.link))
+                item.setArt({"thumb": video.cover, "icon": video.cover, "banner": video.cover, "fanart": video.cover})
+                xbmcplugin.addDirectoryItem(self.handle, item_uri, item, False)
+
+            """
             media_line = ""
             titlesA = common.parseDOM(media_line, "a", ret="title")
             pathsA = common.parseDOM(media_line, "a", attrs={"class": "fleft thumb"}, ret="href")
@@ -249,62 +270,67 @@ class Uakino:
 
         if items_counter == 16:
             self.nextPage(url, page)
+        """
+
+            params = {"page": 2, "url": url}
+            if page:
+                params["page"] = int(page) + 1
+            item_uri = router.build_uri("subcategory", **params)
+            log(f"url: {url}, item_uri: {item_uri}")
+            item = xbmcgui.ListItem("[COLOR=orange]" + settings.language(30003) + "[/COLOR]")
+            item.setArt({"icon": settings.icon_next})
+            xbmcplugin.addDirectoryItem(self.handle, item_uri, item, True)
 
         xbmc.executebuiltin("Container.SetViewMode(52)")
         xbmcplugin.endOfDirectory(self.handle, True)
 
-    def nextPage(self, url, page):
-        log(f"nextPage url: {url} page: {page}")
-        response = common.fetchPage({"link": url})
-
-        navbar = common.parseDOM(response["content"], "div", attrs={"class": "nav_buttons fright"})
-        links = common.parseDOM(navbar, "a", attrs={"class": "nav_button"})
-
-        if navbar and len(links) > 2:
-            uri = sys.argv[0] + f"?mode=subcategory&url={url}&page={page+1}"
-            item = xbmcgui.ListItem(self.language(9002), thumbnailImage=self.icon, iconImage=self.icon)
-            xbmcplugin.addDirectoryItem(self.handle, uri, item, True)
-
     def getMovieURL(self, url):
         log(f"getMovieURL url: {url}")
-        page = common.fetchPage({"link": url})
-        media_div = common.parseDOM(page["content"], "div", attrs={"class": "media_details_embed"})
-        iframe = media_div[0].replace("&lt;", "<").replace("&gt;", ">")
-        iframe_url = common.parseDOM(iframe, "iframe", ret="src")[0].replace("&quot;", "")
+        video = VideoInfo()
+        video.link = settings.url + "/" + url
+        video.id = re.findall(r"\/(\d+?)-", video.link)[0]
+        log(f"video.id: {video.id}")
 
-        self.log("Get media URL for: %s" % iframe_url)
-        page = common.fetchPage({"link": iframe_url})
-        links = []
+        page = self.web.make_response("GET", url).text
+        # write_to_file(page)
+        ashdiLink = common.parseDOM(page, "link", attrs={"itemprop": "video"}, ret="value")[0]
+        log(f"ashdiLink: {ashdiLink}")
+        playlistHtml = common.fetchPage({"link": ashdiLink})["content"].decode("utf-8")
+        # write_to_file(playlistHtml)
 
-        try:
-            links = URLParser().parse(page["content"])
-            url = None
+        b = playlistHtml.find('file:"')
+        e = playlistHtml.find('"', b + 6)
+        playlistLink = playlistHtml[b + 6 : e]
+        #write_to_file(playlistLink)
 
-            for link in links:
-                if "mp4" in link:
-                    url = link
+        m3u = common.fetchPage({"link": playlistLink})["content"].decode("utf-8")
+        #write_to_file(m3u)
 
-            if url:
-                self.play(url)
-            else:
-                # print "content %s" % content
-                log(f'content {page["content"]})')
-                scripts = common.parseDOM(page["content"], "script", attrs={"type": "text/javascript"})
-                # print "scripts %s" % scripts
-                log(f"scripts {scripts})")
+        links = sorted(
+            [[int(link.split("/")[-2]), link] for link in m3u.splitlines() if "http" in link],
+            key=lambda link: link[0],
+            reverse=True)
+        log(f"links: {links}")
 
-                for script in scripts:
-                    # print script
-                    log(f"script {script})")
-                    links = re.findall("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", script)
+        link = links[0][1]
+        for lnk in links:
+            if lnk[0] <= int("".join(c for c in settings.quality if c.isdigit())):
+                link = lnk[1]
+                break
+        log(f"link: {link}")
 
-                for link in links:
-                    if "mp4" in link:
-                        url = link
+        item = xbmcgui.ListItem(path=link)
+        #if subtitles: item.setSubtitles(subtitles)
+        xbmcplugin.setResolvedUrl(self.handle, True, item)
 
-        except IndexError:
-            # print "EXCEPTION: Media source not found"
-            log("EXCEPTION: Media source not found")
+        # playerUrl = f"/engine/ajax/playlists.php?news_id={video.id}&xfield=playlist"
+        # log(f"playerUrl: {playerUrl}")
+        # #player = common.fetchPage({"link": f"{self.url}playerUrl"})
+        # player = self.web.make_response("GET", playerUrl).text
+        # write_to_file(player)
+        #page = common.fetchPage({"link": video.link})["content"].decode("utf-8")  # .replace("\t", "").replace("\n", "")
+
+
 
     def play(self, url):
         log(f"play url: {url}")
@@ -315,7 +341,7 @@ class Uakino:
     def getUserInput(self):
         kbd = xbmc.Keyboard()
         kbd.setDefault("")
-        kbd.setHeading(self.language(1000))
+        kbd.setHeading(settings.language(1000))
         kbd.doModal()
         keyword = None
 
@@ -326,10 +352,9 @@ class Uakino:
                 keyword = kbd.getText()
         return keyword
 
-    def search(self, keyword, unified):
+    def search(self, keyword):
         log(f"search keyword: {keyword}")
-        keyword = translit.rus(keyword) if unified else self.getUserInput()
-        unified_search_results = []
+        keyword = self.getUserInput()
 
         if keyword:
             keyword = self.encode(keyword)
@@ -357,8 +382,6 @@ class Uakino:
                 response = urllib.urlopen(req)
                 html = response.read()
             except Exception:
-                if unified:
-                    UnifiedSearch().collect(unified_search_results)
                 pass
 
             self.log(keyword)
@@ -469,50 +492,16 @@ class Uakino:
                         item.setProperty("IsPlayable", "true")
                         xbmcplugin.addDirectoryItem(self.handle, uri, item, False)
                 else:
-                    item = xbmcgui.ListItem(self.language(9001), thumbnailImage=self.icon)
+                    item = xbmcgui.ListItem(settings.language(9001), thumbnailImage=self.icon)
                     xbmcplugin.addDirectoryItem(self.handle, "", item, False)
             else:
                 self.showErrorMessage("%s: Request timeout" % self.id)
 
-            # INFO: Convert and send unified search results
-            if unified:
-                self.log("Perform unified search and return results")
-                for i, title in enumerate(us_titles):
-                    unified_search_results.append(
-                        {
-                            "title": title,
-                            "url": us_links[i],
-                            "image": us_images[i],
-                            "plugin": self.id,
-                            "is_playable": True,
-                        }
-                    )
-
-                UnifiedSearch().collect(unified_search_results)
-            else:
-                xbmc.executebuiltin("Container.SetViewMode(50)")
-                xbmcplugin.endOfDirectory(self.handle, True)
+            xbmc.executebuiltin("Container.SetViewMode(50)")
+            xbmcplugin.endOfDirectory(self.handle, True)
 
         else:
             self.menu()
-
-    # ===== HELPERS
-    def log(self, message):
-        if self.debug:
-            # print "%s: %s" % (self.id, message)
-            log(f"{self.id}: {message}")
-
-    def error(self, message):
-        # print "%s ERROR: %s" % (self.id, message)
-        log(f"{self.id} ERROR: {message}")
-
-    def showErrorMessage(self, msg):
-        # print msg
-        log(f"{msg}")
-        xbmc.executebuiltin(f"XBMC.Notification(ERROR, {msg}, {str(10 * 1000)})")
-
-    def encode(self, string):
-        return string.decode("cp1251").encode("utf-8")
 
 
 uakino = Uakino()
