@@ -20,7 +20,7 @@ import xbmcgui
 
 
 class MemStorage:
-    ADDON_ID = "plugin.video.uakino.net"
+    ADDON_ID = "plugin.video.uakino.club"
     CACHE_KEY = f"__{ADDON_ID}_cache__"
 
     """
