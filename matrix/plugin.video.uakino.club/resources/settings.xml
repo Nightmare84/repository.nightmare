@@ -1,6 +1,6 @@
 <settings>
     <category label="Main">
-        <setting id="quality" type="labelenum" label="Video quality" values="select|480p|720p|1080p" default="select"/>
+        <setting id="quality" type="labelenum" label="Video quality" values="480p|720p|1080p" default="720p"/>
         <setting id="domain" type="text" label="Site URL" default="uakino.club"/>
         <setting id="translit" type="bool" label="Translit" default="true" />
         <setting id="debug" type="bool" label="Enable debug" defaulf="false"/>
