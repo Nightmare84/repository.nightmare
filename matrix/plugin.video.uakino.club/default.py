@@ -359,7 +359,7 @@ class Uakino:
         if keyword:
             keyword = self.encode(keyword)
 
-            url = "http://uakino.net/search_result.php"
+            url = "http://uakino.club/search_result.php"
 
             headers = {
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -367,7 +367,7 @@ class Uakino:
                 "Accept-Language": "en-US,en;q=0.5",
                 "Connection": "keep-alive",
                 "Content-Type": "application/x-www-form-urlencoded",
-                "Host": "	uakino.net",
+                "Host": "	uakino.club",
                 "Referer": url,
                 "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:17.0) Gecko/17.0 Firefox/17.0",
             }
