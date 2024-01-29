@@ -6,6 +6,7 @@ import uppod
 from helpers import log, show_message, write_to_file, merge_lists, insertString, repairImageTag
 from video_info import VideoInfo
 from settings import settings
+import json
 import router
 import web_helper
 import XbmcHelpers
@@ -295,9 +296,16 @@ class Uakino:
         # write_to_file(page)
         ashdiLink = common.parseDOM(page, "link", attrs={"itemprop": "video"}, ret="value")[0]
         log(f"ashdiLink: {ashdiLink}")
-        playlistHtml = common.fetchPage({"link": ashdiLink})["content"].decode("utf-8")
-        # write_to_file(playlistHtml)
+        if len(ashdiLink) == 0:
+            playerUrl = f"/engine/ajax/playlists.php?news_id={video.id}&xfield=playlist"
+            log(f"playerUrl: {playerUrl}")
+            playlistJson = self.web.make_response("GET", playerUrl).text
+            playlistHtml = json.loads(playlistJson)["response"]
+            write_to_file(playlistHtml)
+            ashdiLink = common.parseDOM(playlistHtml, "li", ret="data-file")[0]
+            log(f"ashdiLink: {ashdiLink}")
 
+        playlistHtml = common.fetchPage({"link": ashdiLink})["content"].decode("utf-8")
         b = playlistHtml.find('file:"')
         e = playlistHtml.find('"', b + 6)
         playlistLink = playlistHtml[b + 6 : e]
