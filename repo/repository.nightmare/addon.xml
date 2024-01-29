@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="repository.nightmare" name="Nightmare Kodi repository" version="0.0.2" provider-name="Nightmare84">
+<addon id="repository.nightmare" name="Nightmare Kodi repository" version="0.0.3" provider-name="Nightmare84">
 	<extension point="xbmc.addon.repository" name="Example Repository">
 		<dir>
 			<info compressed="false">https://raw.githubusercontent.com/Nightmare84/repository.nightmare/master/repo/zips/addons.xml</info>
