@@ -166,6 +166,8 @@ class Uakino:
                 video.title = common.parseDOM(movieHtml, "div", attrs={"class": "deck-title"})[0]
                 video.link = common.parseDOM(movieHtml, "a", attrs={"class": "movie-title"}, ret="href")[0]
                 video.cover = self.url + common.parseDOM(movieHtml, "img", ret="src")[0]
+                video.description = common.parseDOM(movieHtml, "span", attrs={"class": "desc-about-text"})[0]
+                log(f"video.description: {video.description}")
                 clearfixes = common.parseDOM(movieHtml, "div", attrs={"class": "movie-desk-item clearfix"})
                 for clearfix in clearfixes:
                     label = common.parseDOM(clearfix, "div", attrs={"class": "fi-label"})[0]
@@ -294,7 +296,7 @@ class Uakino:
             item.setArt({"icon": settings.icon_next})
             xbmcplugin.addDirectoryItem(self.handle, item_uri, item, True)
 
-        xbmc.executebuiltin("Container.SetViewMode(52)")
+        xbmcplugin.setContent(self.handle, "movies")
         xbmcplugin.endOfDirectory(self.handle, True)
 
     def getMovieURL(self, url):
