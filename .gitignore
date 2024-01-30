@@ -7,3 +7,5 @@
 *.db
 *.sqbpro
 *.db-journal
+
+__pycache__
