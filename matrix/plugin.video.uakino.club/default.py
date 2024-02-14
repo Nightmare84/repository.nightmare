@@ -104,7 +104,7 @@ class Uakino:
             links = common.parseDOM(nav[0], "a", ret="href")
             titles = common.parseDOM(nav[0], "a")
             subs = merge_lists(links, titles)
-            write_to_file(subs)
+            #write_to_file(subs)
             log(f"links length: {len(links)}")
 
             for i, category in enumerate(categories):
@@ -133,7 +133,7 @@ class Uakino:
         storage = MemStorage()
         allSubCategories = storage["subCategories"]
         subCategories = list(filter(lambda sub: sub[1] == url.replace(self.url, ""), allSubCategories))[0][2]
-        write_to_file(subCategories)
+        #write_to_file(subCategories)
 
         for link, title in subCategories:
             url = f"{self.url}{link}"
@@ -159,7 +159,7 @@ class Uakino:
             dleContent = repairImageTag(dleContent)
 
             movies = common.parseDOM(dleContent, "div", attrs={"class": "movie-item short-item"})
-            write_to_file(movies)
+            #write_to_file(movies)
             log(f"movies count {len(movies)}")
             video = VideoInfo()
             for movieHtml in movies:
@@ -167,20 +167,21 @@ class Uakino:
                 video.link = common.parseDOM(movieHtml, "a", attrs={"class": "movie-title"}, ret="href")[0]
                 video.cover = self.url + common.parseDOM(movieHtml, "img", ret="src")[0]
                 video.description = common.parseDOM(movieHtml, "span", attrs={"class": "desc-about-text"})[0]
-                log(f"video.description: {video.description}")
+                #log(f"video.description: {video.description}")
                 clearfixes = common.parseDOM(movieHtml, "div", attrs={"class": "movie-desk-item clearfix"})
+                #write_to_file(movieHtml)
                 for clearfix in clearfixes:
                     label = common.parseDOM(clearfix, "div", attrs={"class": "fi-label"})[0]
                     value = common.parseDOM(clearfix, "div", attrs={"class": "deck-value"})[0]
-                    # log(f"{label}: {value}")
+                    #log(f"{label}: {value}")
 
                     if "imdb" in label:
                         video.rating = float(value)
                     if "Жанр:" in label:
                         video.genre = value
                     if "Рік виходу:" in label:
-                        video.year = common.parseDOM(value, "a")[0]
-
+                        video.year = common.parseDOM(value, "a")[0] if len(value) > 4 else "----"
+                        
                 # log(f"\r\ntitle: {video.title}\r\ncover: {video.cover}\r\nrating: {video.rating}\r\ngenre: {video.genre}\r\nyear: {video.year}\r\n\r\n\r\n\r\n")
 
                 item = xbmcgui.ListItem(video.formatted_title)
@@ -315,7 +316,7 @@ class Uakino:
             log(f"playerUrl: {playerUrl}")
             playlistJson = self.web.make_response("GET", playerUrl).text
             playlistHtml = json.loads(playlistJson)["response"]
-            write_to_file(playlistHtml)
+            #write_to_file(playlistHtml)
             ashdiLink = common.parseDOM(playlistHtml, "li", ret="data-file")[0]
             log(f"ashdiLink: {ashdiLink}")
 
