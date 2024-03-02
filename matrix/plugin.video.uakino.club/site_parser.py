@@ -172,7 +172,7 @@ class SiteParser:
         req = urllib.request.Request(url, None, headers)
 
         response = urllib.request.urlopen(req)
-        responseText = gzip.decompress(response.read()).decode("utf-8")
+        responseText = gzip.decompress(response.read()).decode("utf-8").replace("&#039;", "'")
         return responseText
 
     def __parsePage(self, html: str) -> List[VideoInfo]:

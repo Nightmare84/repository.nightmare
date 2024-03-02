@@ -177,7 +177,7 @@ class Uakino:
         xbmcplugin.endOfDirectory(self.handle, True)
 
     def search(self, keyword, external):
-        keyword = urllib.parse.unquote_plus(keyword) if (external is not None) else self.getUserInput("bones")
+        keyword = urllib.parse.unquote_plus(keyword) if (external is not None) else self.getUserInput()
         if not keyword:
             return self.menu()
         history.add_to_history(keyword)
