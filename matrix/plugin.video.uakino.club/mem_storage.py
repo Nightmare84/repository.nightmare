@@ -35,8 +35,9 @@ class MemStorage:
         try:
             json_string = self._window.getProperty(f"{self.CACHE_KEY}{key}")
             return json.loads(json_string)
-        except ValueError as exc:
-            raise KeyError(f"Item '{key}' cannot be retrieved from MemStorage") from exc
+        except ValueError:
+            #raise KeyError(f"Item '{key}' cannot be retrieved from MemStorage") from exc
+            return None
 
     def __setitem__(self, key, value):
         try:

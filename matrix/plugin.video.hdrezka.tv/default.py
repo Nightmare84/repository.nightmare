@@ -308,9 +308,9 @@ class HdrezkaTV:
         else: video.get_full_info()
         #log(f'translation: {video.translations}')
         #log(f'default translations: {video.default_translation_id}')
-        
+
         saved_translator_id = xbmcgui.Window(xbmcgui.getCurrentWindowId()).getProperty('translator_id')
-        translator_id = saved_translator_id if not saved_translator_id == ''else video.default_translation_id
+        translator_id = saved_translator_id if not saved_translator_id == '' else video.default_translation_id
         if settings.translator == "select" and len(video.translations) > 1 and saved_translator_id == '':
             translator_id = self.select_translator(video)
             xbmcgui.Window(xbmcgui.getCurrentWindowId()).setProperty('translator_id', str(translator_id))

@@ -5,10 +5,10 @@ import time
 import video_info
 
 from voidboost import parse_streams
-from settings import settings
+from settings import Settings as settings
 import XbmcHelpers
 
-class web:
+class Web:
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
     #USER_AGENT = "AppleWebKit/530.20 (KHTML, like Gecko)"
 
@@ -37,12 +37,12 @@ class web:
             }
         return session
 
-    def make_response(self, method, uri, params=None, data=None, cookies=None, headers=None):
+    def make_request(self, method, uri, params=None, data=None, cookies=None, headers=None):
         url = f"{self.url}{uri}" if uri[:4] != "http" else uri
-        helpers.log(f"make_response() method: {method}, url: {url}")
+        helpers.log(f"make_request() method: {method}, url: {url}")
         startTime = time.time()
         result = self.session.request(method, url, params=params, data=data, headers=headers, cookies=cookies)
-        helpers.log(f"make_response() execution time: {int((time.time() - startTime) * 1000)}ms")
+        helpers.log(f"make_request() execution time: {int((time.time() - startTime) * 1000)}ms")
         return result
 
     def get_episodes(self, id, url, translator_id):
@@ -91,5 +91,5 @@ class web:
             "User-Agent": self.USER_AGENT,
             "X-Requested-With": "XMLHttpRequest"
         }
-        response = self.make_response("POST", "/ajax/get_cdn_series/", data=data, headers=headers)
+        response = self.make_request("POST", "/ajax/get_cdn_series/", data=data, headers=headers)
         return response

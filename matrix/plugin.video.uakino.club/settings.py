@@ -1,22 +1,22 @@
 import os
 import xbmcaddon
 
-class settings:
+class Settings:
     def __init__(self):
         return
 
     @staticmethod
     def load():
-        settings.id = "plugin.video.uakino.club"
-        settings.addon = xbmcaddon.Addon(settings.id)
-        settings.addondir = settings.addon.getAddonInfo("path")
-        settings.icon = settings.addon.getAddonInfo("icon")
-        settings.icon_next = os.path.join(settings.addondir, "resources/icons/next.png")
-        settings.language = settings.addon.getLocalizedString
+        Settings.id = "plugin.video.uakino.club"
+        Settings.addon = xbmcaddon.Addon(Settings.id)
+        Settings.addondir = Settings.addon.getAddonInfo("path")
+        Settings.icon = Settings.addon.getAddonInfo("icon")
+        Settings.icon_next = os.path.join(Settings.addondir, "resources/icons/next.png")
+        Settings.language = Settings.addon.getLocalizedString
 
-        settings.quality = settings.addon.getSetting("quality")
-        settings.domain = settings.addon.getSetting("domain")
-        settings.translit = settings.addon.getSettingBool("translit")
-        settings.debug = settings.addon.getSettingBool("debug")
+        Settings.quality = Settings.addon.getSetting("quality")
+        Settings.domain = Settings.addon.getSetting("domain")
+        Settings.translit = Settings.addon.getSettingBool("translit")
+        Settings.debug = Settings.addon.getSettingBool("debug")
 
-        settings.url = f"https://{settings.domain}"
+        Settings.url = f"https://{Settings.domain}"
