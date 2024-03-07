@@ -57,12 +57,16 @@ class Uakino:
         offset = params.get("offset")
         page = params.get("page")
         keyword = params.get("keyword")
+        title = params.get("title")
 
+        log("\r\n\r\n\r\n")
         log(f"mode: {mode}, url: {url}, offset: {offset}, page: {page}, keyword: {keyword}")
         if mode == "play":
             self.play(url)
-        elif mode == "movie" or mode == "show":
-            self.getMovieURL(url)
+        elif mode == "show":
+            self.show(url)
+        elif mode == "playAshdiLink":
+            self.playAshdiLink(title, url)
         elif mode == "subcategory":
             self.getSubCategoryItems(url, page)
         elif mode == "category":
@@ -130,7 +134,7 @@ class Uakino:
         for video in videos:
             item = video.ListItem
             item_uri = router.build_uri("show", url=router.normalize_uri(video.link))
-            xbmcplugin.addDirectoryItem(self.handle, item_uri, item, False)
+            xbmcplugin.addDirectoryItem(self.handle, item_uri, item, True)
 
         params = {"page": 2, "url": url}
         if page:
@@ -148,23 +152,31 @@ class Uakino:
     def getMovieURL(self, url):
         log(f"getMovieURL url: {url}")
         link = self.site.getMovieURL(url)
-
         item = xbmcgui.ListItem(path=link)
-        # if subtitles: item.setSubtitles(subtitles)
         xbmcplugin.setResolvedUrl(self.handle, True, item)
 
-        # playerUrl = f"/engine/ajax/playlists.php?news_id={video.id}&xfield=playlist"
-        # log(f"playerUrl: {playerUrl}")
-        # #player = common.fetchPage({"link": f"{self.url}playerUrl"})
-        # player = self.web.make_request("GET", playerUrl).text
-        # write_to_file(player)
-        # page = common.fetchPage({"link": video.link})["content"].decode("utf-8")  # .replace("\t", "").replace("\n", "")
+    def show(self, url):
+        video = self.site.parseVideoPage(url)
+        if not video.is_container:
+            link = self.site.getLinkFromAshdi(video.ashdiLink)
+            item = xbmcgui.ListItem(video.title, path=link)
+            log("RESOLVED")
+            xbmc.Player().play(link, item)
+        else:
+            ashdis = self.site.getASHDILinks(video.id)
+            for ashdi in ashdis:
+                link = router.build_uri("playAshdiLink", url=ashdi["link"], title=f'{video.title} {ashdi["name"]}')
+                item = xbmcgui.ListItem(f'{video.title} {ashdi["name"]}')
+                item.setArt(video.cover)
+                xbmcplugin.addDirectoryItem(self.handle, link, item, False)
+            xbmcplugin.endOfDirectory(self.handle, True)
 
-    def play(self, url):
-        log(f"play url: {url}")
-
-        item = xbmcgui.ListItem(path=url)
-        xbmcplugin.setResolvedUrl(self.handle, True, item)
+    def playAshdiLink(self, title, url):
+        link = self.site.getLinkFromAshdi(url)
+        item = xbmcgui.ListItem(label=title, path=link)
+        log(f"link: {link}")
+        #xbmcplugin.setResolvedUrl(self.handle, True, item)
+        xbmc.Player().play(link, item)
 
     def history(self):
         log("history()")
@@ -187,11 +199,10 @@ class Uakino:
             item = xbmcgui.ListItem("[COLOR=orange]" + "Нічого не знайдено" + "[/COLOR]")
             item.setArt({"icon": settings.icon_next})
             xbmcplugin.addDirectoryItem(self.handle, "", item, False)
-
         for video in videos:
             item = video.ListItem
             item_uri = router.build_uri("show", url=router.normalize_uri(video.link))
-            xbmcplugin.addDirectoryItem(self.handle, item_uri, item, video.is_series)
+            xbmcplugin.addDirectoryItem(self.handle, item_uri, item, True)
 
         xbmcplugin.setContent(self.handle, "movies")
         xbmc.executebuiltin("Container.SetViewMode(504)")

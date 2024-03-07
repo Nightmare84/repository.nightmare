@@ -32,6 +32,8 @@ class VideoInfo:
         self.country = ""
         self.genre = ""
         self.is_series = False
+        self.is_container = False
+        self.ashdiLink = ""
         self.__country_year = ""
 
         #self.__sql = db_helper.sql(os.path.join(settings.addondir, "uakino.db"))
@@ -41,12 +43,13 @@ class VideoInfo:
     def formatted_title(self):
         return self.build_title()
 
+
     def build_title(self):
         #colored_name = f"[COLOR=green]{self.title}[/COLOR]" if self.has_ukrainian else self.title
         colored_name = self.title
         colored_rating = self.color_rating(self.rating)
-        #colored_info = f"[COLOR=55FFFFFF]{self.age_limit} ({self.country_year})[/COLOR]"
-        colored_info = f"[COLOR=55FFFFFF] ({self.year})[/COLOR]" if self.year > 0 else ""
+        #colored_info = f"[COLOR=55FFFFFF] ({self.year})[/COLOR]" if self.year > 0 else ""
+        colored_info = f"[COLOR=55FFFFFF]{self.age_limit} ({self.year}{', ' + self.country if len(self.country) > 0 else ''}, {self.genre.split(',')[0]})[/COLOR]"
         return f"{colored_name} {colored_rating} {colored_info}"
 
     def color_rating(self, rating):
@@ -74,3 +77,20 @@ class VideoInfo:
 
     def toJson(self):
         return json.dumps(self, default=lambda o: o.__dict__).encode().decode("unicode_escape")
+
+class Translation:
+    def __init__(self, *args):
+        if len(args) == 3:
+            self.id = args[0]
+            self.title = args[1]
+            self.img_title = args[2]
+        else:
+            self.id = 0
+            self.title = ""
+            self.img_title = None
+
+    @property
+    def formatted_title(self):
+        if not self.img_title:
+            return self.title
+        return f"{self.title} ({self.img_title})"

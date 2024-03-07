@@ -2,7 +2,7 @@
 from helpers import log
 
 import re
-import video_info
+from video_info import Translation ,VideoInfo
 import sqlite3
 
 
@@ -28,10 +28,13 @@ class Sql:
     "age_limit"    TEXT,
     "duration"    INTEGER NOT NULL DEFAULT 0,
     "default_translation_id"	INTEGER NOT NULL DEFAULT 0,
+    "default_stream_url"    TEXT,
     "year"    TEXT,
     "country"    TEXT,
     "genre"    TEXT,
     "is_series"    TEXT,
+    "is_container"    TEXT,
+    "ashdiLink"    TEXT,
     PRIMARY KEY("id")
 )"""
         )
@@ -80,7 +83,7 @@ class Sql:
         # self.__connection.close()
         return response
 
-    def save_video(self, video):
+    def save_video(self, video: VideoInfo):
         cur = self.__connection.cursor()
         ids = ",".join([str(translation.id) for translation in video.translations])
         # log(f'ids: {ids}')
@@ -92,13 +95,13 @@ class Sql:
         if len(missed_translations) > 0:
             cur.executemany("INSERT OR IGNORE INTO translators VALUES (?,?,?)", [[t.id, t.title, t.img_title] for t in video.translations])
         # log([video.id, video.title, video.link, video.cover, video.description, video.age_limit, video.duration, video.default_translation_id, video.default_stream_url, video.year, video.country, video.genre, video.is_series])
-        cur.execute("INSERT OR IGNORE INTO video_info VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", [video.id, video.title, video.link, video.cover, video.description, video.age_limit, video.duration, video.default_translation_id, str(video.default_stream_url), video.year, video.country, video.genre, video.is_series])
+        cur.execute("INSERT OR IGNORE INTO video_info VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", [video.id, video.title, video.link, video.cover, video.rating, video.description, video.age_limit, video.duration, video.default_translation_id, str(video.default_stream_url), video.year, video.country, video.genre, video.is_series, video.is_container, video.ashdiLink])
         cur.executemany("INSERT OR IGNORE INTO video_translators VALUES (?,?)", [[video.id, t.id] for t in video.translations])
-        cur.execute("INSERT OR IGNORE INTO video_ratings VALUES (?,?,?,?)", [video.id, video.rating.site, video.rating.imdb, video.rating.kp])
+        #cur.execute("INSERT OR IGNORE INTO video_ratings VALUES (?,?,?,?)", [video.id, video.rating.site, video.rating.imdb, video.rating.kp])
         self.__connection.commit()
 
-    def get_video(self, video_id):
-        video = video_info.video_info()
+    def get_video(self, video_id: int) -> VideoInfo:
+        video = VideoInfo()
         cur = self.__connection.cursor()
         res = cur.execute(
             f"""    select t.id, t.title, t.img_title
@@ -106,10 +109,12 @@ class Sql:
                                 left join translators t on t.id = vt.translator_id
                                 where vt.video_id = {video_id}"""
         )
-        video.translations = [video_info.translation(row[0], row[1], row[2]) for row in res]
+        video.translations = [Translation(row[0], row[1], row[2]) for row in res]
 
         res = cur.execute(
-            f"""    select vi.id, vi.title, vi.link, vi.cover, vi.rating, vi.description, vi.age_limit, vi.duration, vi.default_translation_id, vi.default_stream_url, vi.year, vi.country, vi.genre, vi.is_series
+            f"""    select
+                        vi.id, vi.title, vi.link, vi.cover, vi.rating, vi.description, vi.age_limit, vi.duration, vi.default_translation_id, vi.default_stream_url,
+                        vi.year, vi.country, vi.genre, vi.is_series, vi.is_container, vi.ashdiLink
                     from video_info vi
                     where vi.id = {video_id}"""
         )
@@ -128,6 +133,8 @@ class Sql:
             video.country = row[11]
             video.genre = row[12]
             video.is_series = row[13] != "0"
+            video.is_container = row[14] != "0"
+            video.ashdiLink = row[15]
             video.country_year = f"{video.year}, {video.country}, {video.genre}"
         self.__connection.commit()
         cur.close
