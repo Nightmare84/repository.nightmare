@@ -260,7 +260,8 @@ class SiteParser:
         return m3u
 
     def getLinkFromM3U(self, m3u: str):
-        links = sorted([[int(link.split("/")[-2]), link] for link in m3u.splitlines() if "http" in link], key=lambda link: link[0], reverse=True)
+        log(f"m3u: \r\n{m3u}")
+        links = sorted([[int(link.split("/")[-3]), link] for link in m3u.splitlines() if "http" in link], key=lambda link: link[0], reverse=True)
         log(f"links: {links}")
 
         link = links[0][1]
