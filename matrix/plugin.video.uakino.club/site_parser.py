@@ -246,7 +246,6 @@ class SiteParser:
         return res
 
     def getLinkFromAshdi(self, ashdiLink: str) -> str:
-        url = f"https:{ashdiLink}" if ashdiLink.startswith("//") else ashdiLink
         m3u = self.getM3U(ashdiLink)
         link = self.getLinkFromM3U(m3u)
         return link
