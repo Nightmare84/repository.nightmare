@@ -20,10 +20,11 @@
             <fanart>fanart.jpg</fanart>
         </assets>
     </extension>
-</addon><addon id="plugin.video.uakino.club" name="Uakino.club" version="0.0.5" provider-name="Nightmare84">
+</addon><addon id="plugin.video.uakino.club" name="Uakino.club" version="0.0.6" provider-name="Nightmare84">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
     <import addon="script.module.xbmc.helpers" version="2.0.1" />
+    <import addon="script.module.dandy.search.history" version="3.0.0" />
     <import addon="script.module.translit" version="1.0.3" />
     <import addon="script.module.requests" />
   </requires>
